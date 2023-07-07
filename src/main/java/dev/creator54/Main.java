@@ -38,7 +38,7 @@ public class Main {
             Main main = new Main(); // Instantiate the Main class to initialize the db object
 
             if (args.length < 2) {
-                System.out.println ("Pass operation and value");
+                System.out.println("Invalid arguments. Please provide an operation and a value.");
                 return;
             }
             if(args[0].equals ("add")){

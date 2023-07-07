@@ -6,6 +6,7 @@ import org.json.JSONTokener;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Iterator;
 
 public class Database {
     private static final String DB_FILE_PATH = System.getProperty("user.dir") + "/db.json";
@@ -28,6 +29,13 @@ public class Database {
     public void add(String key, String value) {
         try {
             JSONObject jsonDb = getJsonDb();
+
+            // Check if the value is already present in the database
+            if (containsValue(jsonDb, value)) {
+                System.out.println(getKey (value) + " -> " + value);
+                return;
+            }
+
             jsonDb.put(key, value);
             saveJsonDb(jsonDb);
             System.out.println(key + " -> " + value);
@@ -35,6 +43,40 @@ public class Database {
             e.printStackTrace();
         }
     }
+
+    public String getKey(String value) {
+        try {
+            JSONObject jsonDb = getJsonDb();
+
+            // Iterate through the keys and check for the matching value
+            Iterator<String> keys = jsonDb.keys();
+            while (keys.hasNext()) {
+                String key = keys.next();
+                String storedValue = jsonDb.getString(key);
+                if (storedValue.equals(value)) {
+                    return key; // Found the key associated with the value
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        return null; // Value not found in the database
+    }
+
+
+    private boolean containsValue(JSONObject jsonDb, String value) {
+        Iterator<String> keys = jsonDb.keys();
+        while (keys.hasNext()) {
+            String key = keys.next();
+            String storedValue = jsonDb.getString(key);
+            if (storedValue.equals(value)) {
+                return true; // Value is already present
+            }
+        }
+        return false; // Value is not present
+    }
+
 
     public void remove(String keyOrValue) {
         try {
