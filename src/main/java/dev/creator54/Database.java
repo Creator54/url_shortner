@@ -15,11 +15,30 @@ public class Database {
     public void add(String key, String value) {
         File[] files = new File(REDIRECTS_FOLDER_PATH).listFiles();
 
+        String[] contentLines = {
+                "<!DOCTYPE html>",
+                "<html>",
+                "<head>",
+                "  <meta http-equiv=\"refresh\" content=\"0; URL='" + value + "'\" />",
+                "</head>",
+                "<body>",
+                "</body>",
+                "</html>"
+        };
+
         if (files != null) {
             for (File file : files) {
                 try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
-                    String existingValue = reader.readLine();
-                    if (existingValue.equals(value)) {
+                    boolean contentMatch = true;
+                    for (String line : contentLines) {
+                        String fileLine = reader.readLine();
+                        if (fileLine == null || !fileLine.equals(line)) {
+                            contentMatch = false;
+                            break;
+                        }
+                    }
+
+                    if (contentMatch) {
                         String existingKey = file.getName();
                         System.out.println(existingKey + " -> " + value);
                         return; // Value is already present, do not create a duplicate
@@ -34,14 +53,10 @@ public class Database {
         File file = new File(filePath);
 
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(file))) {
-            writer.write("<!DOCTYPE html>\n");
-            writer.write("<html>\n");
-            writer.write("<head>\n");
-            writer.write("  <meta http-equiv=\"refresh\" content=\"0; URL='" + value + "'\" />\n");
-            writer.write("</head>\n");
-            writer.write("<body>\n");
-            writer.write("</body>\n");
-            writer.write("</html>");
+            for (String line : contentLines) {
+                writer.write(line);
+                writer.newLine();
+            }
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -52,33 +67,36 @@ public class Database {
     public void remove(String keyOrValue) {
         File[] files = new File(REDIRECTS_FOLDER_PATH).listFiles();
 
-        if (files != null) {
-            boolean removed = false;
+        boolean removed = false;
 
-            for (File file : files) {
-                String fileName = file.getName();
-                String filePath = file.getAbsolutePath();
-
-                try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
-                    String value = reader.readLine();
-
-                    if (fileName.equals(keyOrValue) || value.equals(keyOrValue)) {
+        for (File file : files) {
+            if(file.getName ().equals (keyOrValue)){
+                file.delete ();
+                removed = true;
+                break;
+            }
+            try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    if (line.contains (keyOrValue)) {
                         file.delete();
-                        System.out.println("Removed: " + keyOrValue);
                         removed = true;
+                        break;
                     }
-                } catch (IOException e) {
-                    e.printStackTrace();
                 }
+            } catch (IOException e) {
+                e.printStackTrace();
             }
+        }
 
-            if (!removed) {
-                System.out.println("Key or value not found in the DB.");
-            }
-        } else {
-            System.out.println("Database is empty.");
+        if (!removed) {
+            System.out.println("Redirect does not exists in the Database.");
+        }
+        else {
+            System.out.println ("Redirect "+ keyOrValue + " removed !");
         }
     }
+
 
     public boolean containsKey(String key) {
         File file = new File(REDIRECTS_FOLDER_PATH + key);
