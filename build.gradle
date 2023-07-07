@@ -1,6 +1,7 @@
 plugins {
     id 'java'
     id 'application'
+    id 'com.github.johnrengelman.shadow' version '7.1.2'
 }
 
 group = 'dev.creator54'
@@ -24,6 +25,20 @@ run {
     if (project.hasProperty('args')) {
         args project.property('args').split(',')
     }
+}
+
+shadowJar {
+    archiveClassifier.set('')
+    manifest {
+        attributes 'Main-Class': 'dev.creator54.Main.MainClass'
+    }
+}
+
+task createExecutableJar(type: Copy) {
+    dependsOn shadowJar
+    from shadowJar.archivePath
+    into "$buildDir/libs"
+    rename { "url_shortner-${project.version}.jar" }
 }
 
 test {
